@@ -25,7 +25,7 @@ const AccountSchema = new mongoose.Schema({
     },
     accountNumber : {
         type : String,
-        default : ()=> `ACC ${Math.floor(1000000000 + Math.random() * 9000000000)}`,
+        default : ()=> `ACC${Math.floor(1000000000 + Math.random() * 9000000000)}`,
     },
     balance : {
         type : Number,

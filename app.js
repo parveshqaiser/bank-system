@@ -1,8 +1,11 @@
+import dotnev from "dotenv";
 import express from "express";
 import cors from "cors";
 import authRoutes from "./src/routes/auth.routes.js";
 import cookieParser from "cookie-parser";
 import dbConnection from "./src/config/db.js";
+
+dotnev.config();
 
 let app = express();
 app.use(cookieParser());

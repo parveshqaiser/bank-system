@@ -15,6 +15,10 @@ const LedgerSchema = new mongoose.Schema({
         ref : "transactions",
         immutable : true
     },
+    accountNumber : {
+        type : String,
+        immutable : true
+    },
     type : {
         type : String,
         enum : ["CREDIT","DEBIT"],

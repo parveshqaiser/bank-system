@@ -18,12 +18,13 @@ const TransactionSchema = new mongoose.Schema({
     idempotencyKey : {
         type : String,
         unique: true,
+        index:true,
     },
     status : {
         type : String,
         enum : ["PENDING","COMPLETED","FAILED","REVERSED"],
         default : "PENDING",
-    }
+    },
 },{timestamps:true});
 
 let TransactionModel = mongoose.model("transaction", TransactionSchema);

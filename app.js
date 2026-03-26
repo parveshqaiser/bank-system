@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import authRoutes from "./src/routes/auth.routes.js";
 import accountRoutes from "./src/routes/account.routes.js";
+import transactionRoutes from "./src/routes/transaction.routes.js";
 
 import cookieParser from "cookie-parser";
 import dbConnection from "./src/config/db.js";
@@ -23,6 +24,7 @@ app.get("/", (req, res)=>{
 
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/account", accountRoutes);
+app.use("/api/v1/txn", transactionRoutes);
 
 dbConnection().then(()=>{
     console.log("DB connected");

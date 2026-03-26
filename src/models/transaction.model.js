@@ -3,12 +3,12 @@ import mongoose from "mongoose";
 const TransactionSchema = new mongoose.Schema({
     fromAccount : {
         type : mongoose.Schema.Types.ObjectId,
-        ref : "users",
+        ref : "account",
         required : true,
     },
     toAccount : {
         type : mongoose.Schema.Types.ObjectId,
-        ref : "users",
+        ref : "account",
         required : true,
     },
     amount : {
@@ -25,8 +25,6 @@ const TransactionSchema = new mongoose.Schema({
         default : "PENDING",
     }
 },{timestamps:true});
-
-// AccountSchema.index({userId:1, accountNumber:1});
 
 let TransactionModel = mongoose.model("transaction", TransactionSchema);
 

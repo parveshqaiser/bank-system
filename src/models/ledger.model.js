@@ -28,7 +28,7 @@ const LedgerSchema = new mongoose.Schema({
         type : Number,
         immutable : true
     },
-    description : {
+    remarks : {
         type : String,
     }
 },{timestamps:true});

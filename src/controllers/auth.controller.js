@@ -87,8 +87,42 @@ export const userLogin = async(req, res)=>{
             secure: true,
             httpOnly:true
         }).json({
-            message : "Login Successful",
+            message : `Login Successful. Welcome back ${user.name}`,
             success : true
+        });
+
+    } catch (error) {
+        res.status(500).json({ 
+            message: "Server Error", 
+            error: error.message, 
+            success: false 
+        });
+    }
+}
+
+export const userLogout = async(req, res)=>{
+    try {
+        let currentUser = req.user;
+
+        let user = await UserModel.findById(currentUser.id);
+
+        if(!user){
+            return res.status(404).json({
+                message : "Invalid User",
+                success : false
+            });
+        }
+
+        let data = {name : user.name};
+
+        res.status(200).clearCookie("token",{
+            sameSite: "strict",
+            secure: true,
+            httpOnly: true,
+        }).json({
+            message: "User Logout Success",
+            success: true,
+            data: data
         });
 
     } catch (error) {

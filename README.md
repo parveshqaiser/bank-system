@@ -1,8 +1,8 @@
-💳 Bank Transaction System
+💳 Bank Transaction System <br/>
 
 A backend project simulating real-world banking transactions using MongoDB transactions and ACID principles.
 
-🚀 Key Features
+🚀 Key Features <br/>
 Designed ACID-compliant transaction system using MongoDB sessions
 Implemented double-entry ledger for strong data consistency
 Handled concurrent transactions and prevented race conditions
@@ -16,7 +16,7 @@ User → Other Users
 This approach ensures real-world banking behavior and avoids direct balance manipulation.
 
 
-🛠️ Tech Stack
-Node.js
-Express.js
+🛠️ Tech Stack <br/>
+Node.js <br/>
+Express.js <br/>
 MongoDB (Transactions & Sessions)

@@ -5,14 +5,16 @@ export const createAccount = async(req, res)=>{
     try {
         let currentUser = req.user;
 
-        let user = await AccountModel.create({
+        let account = await AccountModel.create({
             userId : currentUser.id
         });
+
+        let data  = {accountNumber : account.accountNumber,...currentUser}
 
         res.status(201).json({
             message : "Account Created",
             success: true,
-            currentUser
+            data
         });
 
     } catch (error) {

@@ -130,19 +130,18 @@ export const depoistFromSystemAccount = async (req, res) => {
     }
 };
 
-export const createTransaction = async(req, res)=>{
+export const createTransferFunds = async(req, res)=>{
+    // this is between user to user
 
-    // 1. check whether account exist & status is in "ACTIVE" state
-    // 2. check from & to should not be same
-    // 3. check idempotencyKey Exist || transactionId key
-    // 4. if exist , check for all status
-    // 5. check balance of sender
-
+    let session = null;
+    let currentUser  = req.user;
+    console.log("currentUser in transfer funds", currentUser);
 
     try {
-        let {fromAccount, toAccount, amount , idempotencyKey} = req.body;
 
-        let inputError = checkInputValidation(fromAccount, toAccount, amount , idempotencyKey);
+        let {fromAccountId, toAccountId, amount , idempotencyKey, remarks} = req.body;
+
+        let inputError = checkInputValidation(fromAccountId, toAccountId, amount , idempotencyKey);
         
         if(inputError){
             return res.status(400).json({
@@ -151,78 +150,142 @@ export const createTransaction = async(req, res)=>{
             });
         }
 
-        let fromAcc = await AccountModel.findOne({_id:fromAccount, status:"ACTIVE"});
-        let toAcc = await AccountModel.findOne({_id:toAccount , status:"ACTIVE"});
-
-        if (fromAccount === toAccount) {
+        if(fromAccountId == toAccountId){
             return res.status(400).json({
-                message: "Invalid Transaction to Same Account",
+                messsage : "Invalid Account Transfer"
+            })
+        }
+
+        if (amount <= 0) {
+            return res.status(400).json({
+                message: "Amount must be greater than 0",
                 success: false
             });
         }
 
+        // Start session
+        session = await mongoose.startSession();
+
+        let fromAcc = await AccountModel.findOne({_id:fromAccountId, status:"ACTIVE"}).session(session);
+        let toAcc = await AccountModel.findOne({_id:toAccountId , status:"ACTIVE"}).session(session);
+
         if(!fromAcc || !toAcc){
+            await session.endSession();
             return res.status(404).json({
-                message : "Invalid Account",
+                message : "Account Does not Exist",
                 success : false
             });
         }
 
-        // check idempotency key exist or not
-        let transactionExist = await TransactionModel.findOne({idempotencyKey});
+        let transactionExist = await TransactionModel.findOne({ idempotencyKey }).session(session);
 
-        if(transactionExist){
-
-            if(transactionExist.status == "PENDING"){
-                return res.status(200).json({
-                    message : "Transaction Still Processing. Please Wait for some time",
-                    success : true
-                })
-            }
-
-            if(transactionExist.status == "COMPLETED"){
-                return res.status(200).json({
-                    message : "Transaction Completed",
-                    success : true
-                })
-            }
-
-            if(transactionExist.status == "FAILED"){
-                return res.status(400).json({
-                    message: "Previous transaction failed",
-                    success: false
-                });
-            }
+        // If transaction already exists, return existing status without starting new transaction
+        if (transactionExist) {
+            await session.endSession();
+            
+            let statusMessages = {
+                "PENDING": "Transaction Still Processing. Please Wait for some time",
+                "COMPLETED": "Transaction Completed",
+                "FAILED": "Previous transaction failed"
+            };
+            
+            let statusCode = transactionExist.status === "FAILED" ? 400 : 200;
+            
+            return res.status(statusCode).json({
+                message: statusMessages[transactionExist.status],
+                success: transactionExist.status !== "FAILED",
+                // data: transactionExist.status === "COMPLETED" ? transactionExist : undefined
+            });
         }
 
-        if(fromAcc.balance <amount){
+        session.startTransaction();
+
+        fromAcc = await AccountModel.findOne({ _id: fromAccountId, status: "ACTIVE" }).session(session);
+        toAcc = await AccountModel.findOne({ _id: toAccountId, status: "ACTIVE" }).session(session);
+
+        // Double-check balance after transaction start
+        if (fromAcc.balance < amount) {
+            await session.abortTransaction();
+            await session.endSession();
             return res.status(400).json({
-                message: `Insufficient Balance in your account. INR${fromAcc.balance} available`,
+                message: `Insufficient Balance in your account. ₹${fromAcc.balance} available`,
                 success: false
             });
         }
 
-        let session = await mongoose.startSession();
-        session.startTransaction();
-
-        let transaction = await TransactionModel.create({
-            fromAccount,
-            toAccount,
-            amount,
+        let [txn] = await TransactionModel.create([{
+            fromAccount: fromAcc._id,
+            toAccount: toAcc._id,
+            amount: amount,
             idempotencyKey,
-            status : "PENDING"
+            status: "PENDING",
+            remarks: remarks || ""
+        }], { session });
+
+        fromAcc.balance -= amount;
+        toAcc.balance += amount;
+
+        await fromAcc.save({ session });
+        await toAcc.save({ session });
+
+        await LedgerModel.insertMany([
+             {
+                accountId: fromAcc._id,
+                amount: amount,
+                transactionId: txn._id,
+                accountNumber : fromAcc.accountNumber,
+                type: "DEBIT",
+                balanceAfter: fromAcc.balance,
+                remarks : remarks || ""
+            },
+            {
+                accountId: toAcc._id,
+                amount: amount,
+                transactionId: txn._id,
+                accountNumber : toAcc.accountNumber,
+                type: "CREDIT",
+                balanceAfter: toAcc.balance,
+               remarks : remarks || ""
+            }
+        ], { session });
+
+        txn.status = "COMPLETED";
+        await txn.save({ session });
+
+        await session.commitTransaction();
+        await session.endSession();
+
+        res.status(201).json({
+            message: "Transfer Funds Successful",
+            success: true,
+            data: txn
         });
 
-
-
-
-
-
     } catch (error) {
+       if (session) {
+            try {
+                if (session.inTransaction()) {
+                    await session.abortTransaction();
+                }
+            } catch (abortError) {
+                console.error("Error aborting transaction:", abortError);
+            }
+            await session.endSession();
+        }
+
+        console.error("Transfer Fund error:", error);
         res.status(500).json({ 
-            message: "Server Error", 
+            message: "Transfer Fund Failed", 
             error: error.message, 
             success: false 
         });
     }
 }
+
+
+
+// 1. check whether account exist & status is in "ACTIVE" state
+    // 2. check from & to should not be same
+    // 3. check idempotencyKey Exist || transactionId key
+    // 4. if exist , check for all status
+    // 5. check balance of sender

@@ -21,4 +21,5 @@ This approach ensures real-world banking behavior and avoids direct balance mani
 🛠️ Tech Stack <br/>
 Node.js <br/>
 Express.js <br/>
-MongoDB (Transactions & Sessions)
+MongoDB (Transactions & Sessions) <br/>
+Jwt <br/>

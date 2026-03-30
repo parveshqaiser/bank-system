@@ -135,7 +135,6 @@ export const createTransferFunds = async(req, res)=>{
 
     let session = null;
     let currentUser  = req.user;
-    console.log("currentUser in transfer funds", currentUser);
 
     try {
 
@@ -285,7 +284,7 @@ export const createTransferFunds = async(req, res)=>{
 
 
 // 1. check whether account exist & status is in "ACTIVE" state
-    // 2. check from & to should not be same
-    // 3. check idempotencyKey Exist || transactionId key
-    // 4. if exist , check for all status
-    // 5. check balance of sender
+// 2. check "from & to" should not be same
+// 3. check idempotencyKey Exist || transactionId key
+// 4. if exist , check for all status
+// 5. check balance of sender

@@ -32,7 +32,10 @@ export const getAccountDetails = async(req, res)=>{
         let accNo = req.params.id;
         let currentUser = req.user;
 
-        let loggedInUserAccount = await AccountModel.findOne({accountNumber:accNo, userId :currentUser.id });
+        let loggedInUserAccount = await AccountModel.findOne({
+            accountNumber:accNo, 
+            userId :currentUser.id 
+        });
 
         if(!loggedInUserAccount){
             return res.status(403).json({
@@ -121,3 +124,6 @@ export const getAccountDetails = async(req, res)=>{
     }
 }
 
+
+
+// filter options like date from & to time.

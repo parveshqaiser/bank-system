@@ -85,7 +85,7 @@ export const depoistFromSystemAccount = async (req, res) => {
                 accountNumber : userAccount.accountNumber,
                 type: "CREDIT",
                 balanceAfter: userAccount.balance,
-                description: "Deposit from System"
+                remarks: `System Credited -${systemAccount.accountNumber}`
             },
             {
                 accountId: systemAccount._id,
@@ -94,7 +94,7 @@ export const depoistFromSystemAccount = async (req, res) => {
                 accountNumber : systemAccount.accountNumber,
                 type: "DEBIT",
                 balanceAfter: systemAccount.balance,
-                description: "Deposit to User"
+                remarks: `System Debited - ${userAccount.accountNumber}`
             }
         ], { session });
 
@@ -234,7 +234,7 @@ export const createTransferFunds = async(req, res)=>{
                     accountNumber: fromAcc.accountNumber,
                     type: "DEBIT",
                     balanceAfter: fromAcc.balance,
-                    remarks: remarks || ""
+                    remarks: `${remarks || ""} Transferd to ${fromAcc.accountNumber}`
                 },
                 {
                     accountId: toAcc._id,
@@ -243,7 +243,7 @@ export const createTransferFunds = async(req, res)=>{
                     accountNumber: toAcc.accountNumber,
                     type: "CREDIT",
                     balanceAfter: toAcc.balance,
-                    remarks: remarks || ""
+                    remarks: `${remarks || ""} from ${fromAcc.accountNumber}`
                 }
             ], { session });
             

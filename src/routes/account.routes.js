@@ -7,7 +7,7 @@ import limiter from "../middlewares/rateLimiter.js";
 const router = express.Router();
 
 router.post("/", authenticateUser, createAccount);
-router.get("/:id", authenticateUser, limiter, getAccountDetails);
+router.get("/:id",authenticateUser,limiter, getAccountDetails);
 
 
 export default router;
